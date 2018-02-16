@@ -12,8 +12,38 @@ $shape_id = "";
   }
   $shape = "SELECT distinct(`attribute_name`),`attribute_id`,attribute_label FROM `attributes` where `attribute_type` = 'Shape'";
   $sql2 = mysqli_query($conn, $shape);
-  $status_table = "SELECT distinct(diamond_status) AS status,count(diamond_status) AS count,sum(diamond_size) AS carat FROM `diamonds` WHERE diamond_type = 'Certified' AND diamond_lot_no LIKE 'C%' AND diamond_status NOT IN ('Invoiced','Deleted') group by diamond_status ORDER BY diamond_id DESC";
+  $status_table = "SELECT distinct(diamond_status) AS status,count(diamond_status) AS count,CEIL(sum(diamond_size)) AS carat FROM `diamonds` WHERE diamond_type = 'Certified' AND diamond_lot_no LIKE 'C%' AND diamond_status NOT IN ('Invoiced','Deleted') group by diamond_status ORDER BY diamond_id DESC";
   $status_table_result = mysqli_query($conn, $status_table);
+
+  $total_cert = mysqli_fetch_assoc(mysqli_query($conn,"SELECT
+ ROUND(SUM(`diamond_price_total`),2) AS sumTotal,
+ ROUND(SUM(`diamond_price_total_revaluated`),2) AS revalTotal,
+ ROUND(SUM(`diamond_price_total_final`),2) AS finalTotal,
+ ROUND(SUM(`diamond_price_sell`),2) AS sellTotal,
+ ROUND(SUM(`diamond_size`),2) AS caratTotal,
+ COUNT(*) AS certCount
+
+FROM
+ diamonds
+WHERE
+	`diamond_type` = 'Certified'
+AND `diamond_lot_no` LIKE 'C%'
+AND `diamond_status` NOT IN ('Invoiced','Deleted')"));
+
+$total_cert_temp = mysqli_fetch_assoc(mysqli_query($conn,"SELECT
+ROUND(SUM(`diamond_price_total`),2) AS TempsumTotal,
+ROUND(SUM(`diamond_price_total_revaluated`),2) AS TemprevalTotal,
+ROUND(SUM(`diamond_price_total_final`),2) AS TempfinalTotal,
+ROUND(SUM(`diamond_price_sell`),2) AS TempsellTotal,
+ROUND(SUM(`diamond_size`),2) AS TempcaratTotal,
+COUNT(*) AS tempCount
+FROM
+diamonds
+WHERE
+`diamond_type` = 'Certified'
+AND `diamond_lot_no` LIKE 'T%'
+AND `diamond_status` NOT IN ('Invoiced','Deleted')"));
+
 ?>
 
 
@@ -25,39 +55,137 @@ $shape_id = "";
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <title>DSM | Certified</title>
 
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.2/css/bootstrap.min.css" integrity="sha384-y3tfxAZXuh4HwSYylfB+J125MxIs6mR5FOHamPBG064zB+AFeWH94NdvaCBm8qnd" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
 
     </head>
   <body>
+    <div class="container-fluid <text-center></text-center>">
     <?php $started_at = microtime(true); ?>
+
 <div class="row">
   <div class="form-group col-md-5">
             <label for="search_table" class="control-label">Search Inventory</label>
             <input type="text" name="search_table" id="search_table" placeholder="Search Inventory" class="form-control" />
-          </div>
-<div class="col-md-6">
-<table class="table table-responsive col-md-4">
-  <thead>
-    <th>Status</th>
-    <th>Count</th>
-    <th>Carat</th>
-   </thead>
-   <tbody>
+  </div>
 
-     <?php while($status = mysqli_fetch_assoc($status_table_result)):?>
-        <tr>
-        <td><?php echo $status['status'] ?></td>
+
+<div class="col-md-4" style="float:right;">
+  <ul class="nav nav-tabs" id="myTab" role="tablist">
+    <li class="nav-item">
+      <a class="nav-link active" id="home-tab" data-toggle="tab" href="#home" role="tab" aria-controls="home" aria-selected="true">Status</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" id="profile-tab" data-toggle="tab" href="#profile" role="tab" aria-controls="profile" aria-selected="false">Certified</a>
+    </li>
+  </ul>
+  <div class="tab-content" id="myTabContent" >
+    <div class="tab-pane fade show active" id="home" role="tabpanel" aria-labelledby="home-tab">
+      <table class="table table-sm col-md-4 table-bordered" style="border:1px solid black;">
+      <thead>
+        <th>Status</th>
+        <th>Count</th>
+        <th>Carat</th>
+       </thead>
+       <tbody>
+
+         <?php while($status = mysqli_fetch_assoc($status_table_result)):
+          if ($status['status'] == 'InTranist'){ ?>
+            <tr style="background-color: #f9e79f ;">
+            <td><button type="button" class="btn btn-link status2" value="<?= $status['status'] ?>"><?php echo $status['status'] ?></button></td>
+            <td><?php echo $status['count'] ?></td>
+            <td><?php echo $status['carat'] ?></td>
+          </tr>
+        <?php } if($status['status'] == 'Available'){ ?>
+          <tr style="background-color: #FDFEFE;">
+          <td><button type="button" class="btn btn-link status2"  value="<?= $status['status'] ?>"><?php echo $status['status'] ?></button></td>
+          <td><?php echo $status['count'] ?></td>
+          <td><?php echo $status['carat'] ?></td>
+        </tr>
+      <?php } if($status['status'] == 'Reserve'){ ?>
+          <tr style="background-color:#c4dbea;">
+          <td><button type="button" class="btn btn-link status2"  value="<?= $status['status'] ?>"><?php echo $status['status'] ?></button></td>
+          <td><?php echo $status['count'] ?></td>
+          <td><?php echo $status['carat'] ?></td>
+        </tr>
+      <?php } if($status['status'] == 'In Transfer Process'){ ?>
+          <tr style="background-color:#a9dfbf;">
+          <td><button type="button" class="btn btn-link status2"  value="<?= $status['status'] ?>"><?php echo $status['status'] ?></button></td>
+          <td><?php echo $status['count'] ?></td>
+          <td><?php echo $status['carat'] ?></td>
+        </tr>
+      <?php } if($status['status'] == 'On Consignment') { ?>
+        <tr style="background-color: #f1c4c0;">
+        <td><button type="button" class="btn btn-link status2"  value="<?= $status['status'] ?>"><?php echo $status['status'] ?></button></td>
         <td><?php echo $status['count'] ?></td>
         <td><?php echo $status['carat'] ?></td>
       </tr>
-     <?php endwhile; ?>
+        <?php } endwhile; ?>
 
-   </tbody>
-</table>
+       </tbody>
+    </table></div>
+    <div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">
+      <table class="table col-md-4 table-bordered" style="border:1px solid black;">
+        <thead>
+          <th>Desc/type</th>
+          <th>Certified</th>
+          <th>Temp.Cert</th>
+          <th>Total</th>
+        </thead>
+        <tbody>
+          <tr>
+          <th>Orig.Price</th>
+          <td><?=$total_cert['sumTotal']?></td>
+          <td><?=$total_cert_temp['TempsumTotal']?></td>
+          <td><?=$total_cert['sumTotal'] + $total_cert_temp['TempsumTotal']?></td>
+        </tr>
+          <tr>
+          <th>Rev.Price</th>
+          <td><?=$total_cert['revalTotal']?></td>
+          <td><?=$total_cert_temp['TemprevalTotal']?></td>
+          <td><?= $total_cert['revalTotal'] + $total_cert_temp['TemprevalTotal'] ?></td>
+        </tr>
+        <tr>
+        <th>Fin.Price</th>
+        <td><?=$total_cert['finalTotal']?></td>
+        <td><?=$total_cert_temp['TempfinalTotal']?></td>
+        <td><?= $total_cert['finalTotal'] + $total_cert_temp['TempfinalTotal'] ?></td>
+      </tr>
+      <tr>
+      <th>Sell.Price</th>
+      <td><?=$total_cert['sellTotal']?></td>
+      <td><?=$total_cert_temp['TempsellTotal']?></td>
+      <td><?=$total_cert['sellTotal'] + $total_cert_temp['TempsellTotal'] ?></td>
+    </tr>
+    <tr>
+    <th>Carat</th>
+    <td><?= $total_cert['caratTotal']?></td>
+    <td><?= $total_cert_temp['TempcaratTotal']?></td>
+    <td><?= $total_cert['caratTotal'] + $total_cert_temp['TempcaratTotal'] ?></td>
+  </tr>
+  <tr>
+  <th># Diamonds</th>
+  <td><?= $total_cert['certCount']?></td>
+  <td><?= $total_cert_temp['tempCount']?></td>
+  <td><?= $total_cert['certCount'] + $total_cert_temp['tempCount'] ?></td>
+</tr>
+
+        </tbody>
+      </table>
+    </div>
+
+
+  </div>
+
+
+
+  <div class="collapse" id="collapseExample">
+
+
+
+  </div>
 </div>
 
 </div>
-
 
 <div class="row">
 
@@ -69,10 +197,10 @@ $shape_id = "";
             <?php
                  $sql_count = mysqli_query($conn, "SELECT COUNT(*) from `diamonds` WHERE diamond_type = 'Certified' AND `diamond_shape_id` = '".$row_shape['attribute_id']."' AND diamond_lot_no LIKE 'C%' AND diamond_status NOT IN ('Invoiced','Deleted') ");
                  $row_count = mysqli_fetch_array($sql_count);
-
+                  if($row_count[0] != 0){
                 ?>
-            <button style="color:blue;background-color:white;" value="<?=$row_shape['attribute_id']?>"  name = 'shape' type="submit"><img height="20" width="20" src="img\round.png"><?= $row_shape['attribute_label']."(".$row_count[0].")" ?></button>
-          <?php endwhile;?>
+            <button class="btn btn-outline-primary" value="<?=$row_shape['attribute_id']?>"  name = 'shape' type="submit" id="demo3" ><img height="20" width="20" src="img\round.png"><?= $row_shape['attribute_label']."(".$row_count[0].")" ?></button>
+          <?php } endwhile;?>
       </fieldset>
 
     </form>
@@ -381,9 +509,10 @@ if ($array['diamond_status'] == 'InTranist') {
         <?php } ?>
       </tbody>
     </table>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.4/jquery.js"></script>
+  </div>
+  <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
 
     <script type="text/javascript">
          $("#search_table").keyup(function(){
@@ -397,6 +526,21 @@ if ($array['diamond_status'] == 'InTranist') {
            });
          });
          </script>
+         <script type="text/javascript">
+      $('.status2').click(function() {
+        var id = $(this).val();
+        $('#search_table').val(id);
+        _this = this;
+        // Show only matching TR, hide rest of them
+        $.each($("#searchtable tbody tr"), function() {
+        if($(this).text().toLowerCase().indexOf($(_this).val().toLowerCase()) === -1)
+            $(this).hide();
+            else
+            $(this).show();
+        });
+      });
+    </script>
+
            <?php echo 'Cool, that only took ' . (microtime(true) - $started_at) ?>
   </body>
 
