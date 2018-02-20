@@ -1,5 +1,5 @@
 <?php
-  $conn = mysqli_connect("localhost","root","K!ller.21896#","master");
+  $conn = mysqli_connect("localhost","root","K!ller.21896#","dsm_new");
 $shape_id = "";
   if (isset($_POST['shape'])) {
     $shape_id = $_POST['shape'];
@@ -59,7 +59,29 @@ AND `diamond_status` NOT IN ('Invoiced','Deleted')"));
 
     </head>
   <body>
-    <div class="container-fluid <text-center></text-center>">
+    <div class="container-fluid text-center">
+      <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <a class="navbar-brand" href="#">Diamond Inventory</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="nav navbar-nav ml-auto">
+            <li class="nav-item active">
+              <a class="nav-link" href="index.php">Certified <span class="sr-only">(current)</span></a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="black.php">Black</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="fancy.php">Fancy</a>
+            </li>
+         <li class="nav-item">
+              <a class="nav-link" href="matchingpair.php">Matching Pair</a>
+            </li>
+          </ul>
+        </div>
+      </nav>
     <?php $started_at = microtime(true); ?>
 
 <div class="row">
@@ -178,11 +200,7 @@ AND `diamond_status` NOT IN ('Invoiced','Deleted')"));
 
 
 
-  <div class="collapse" id="collapseExample">
 
-
-
-  </div>
 </div>
 
 </div>
